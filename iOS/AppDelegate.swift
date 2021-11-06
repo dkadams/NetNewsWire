@@ -79,6 +79,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 	}
 	
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+		let launchOptionsString: NSString = (launchOptions?.debugDescription ?? ">>NONE<<") as NSString
+		os_log("Launch with options: %{public}@", log: log, type: .default, launchOptionsString)
+
 		AppDefaults.registerDefaults()
 
 		let isFirstRun = AppDefaults.shared.isFirstRun
@@ -125,6 +128,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 	}
 	
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+		os_log("Processing background fetch results", log: log, type: .default)
+
 		DispatchQueue.main.async {
 			self.resumeDatabaseProcessingIfNecessary()
 			AccountManager.shared.receiveRemoteNotification(userInfo: userInfo) {
@@ -394,13 +399,15 @@ private extension AppDelegate {
 
 		DispatchQueue.main.async {
 			if AccountManager.shared.isSuspended {
+				os_log(.default, log: self.log, "Resuming account manager")
 				AccountManager.shared.resumeAll()
 			}
 			AccountManager.shared.refreshAll(errorHandler: ErrorHandler.log) { [unowned self] in
 				if !AccountManager.shared.isSuspended {
 					if #available(iOS 14, *) {
-						try? WidgetDataEncoder.shared.encodeWidgetData()
+						try? WidgetDataEncoder.shared.encodeWidgetData(source: "AppDelegate.performBackgroundFeedRefresh")
 					}
+					os_log(.default, log: self.log, "Suspending application")
 					self.suspendApplication()
 					os_log("Account refresh operation completed.", log: self.log, type: .info)
 					task.setTaskCompleted(success: true)
@@ -446,7 +453,7 @@ private extension AppDelegate {
 		account!.syncArticleStatus(completion: { [weak self] _ in
 			if !AccountManager.shared.isSuspended {
 				if #available(iOS 14, *) {
-					try? WidgetDataEncoder.shared.encodeWidgetData()
+					try? WidgetDataEncoder.shared.encodeWidgetData(source: "AppDelegate.handleMarkAsRead")
 				}
 				self?.prepareAccountsForBackground()
 				self?.suspendApplication()
@@ -475,7 +482,7 @@ private extension AppDelegate {
 		account!.syncArticleStatus(completion: { [weak self] _ in
 			if !AccountManager.shared.isSuspended {
 				if #available(iOS 14, *) {
-					try? WidgetDataEncoder.shared.encodeWidgetData()
+					try? WidgetDataEncoder.shared.encodeWidgetData(source: "AppDelegate.handleMarkAsStarred")
 				}
 				self?.prepareAccountsForBackground()
 				self?.suspendApplication()

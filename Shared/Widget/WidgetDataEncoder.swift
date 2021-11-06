@@ -29,12 +29,14 @@ public final class WidgetDataEncoder {
 	private init () {}
 	
 	@available(iOS 14, *)
-	func encodeWidgetData() throws {
+	func encodeWidgetData(source: String) throws {
 		
-		os_log(.debug, log: log, "Starting encoding widget data.")
+		os_log(.default, log: log, "Launch async encoding of widget data for: %{public}@", source as NSString)
 		
 		DispatchQueue.main.async {
 			do {
+				os_log(.fault, log: self.log, "encoding widget data for: %{public}@", source as NSString)
+
 				let unreadArticles = Array(try AccountManager.shared.fetchArticles(.unread(self.fetchLimit))).sortedByDate(.orderedDescending)
 				let starredArticles = Array(try AccountManager.shared.fetchArticles(.starred(self.fetchLimit))).sortedByDate(.orderedDescending)
 				let todayArticles = Array(try AccountManager.shared.fetchArticles(.today(self.fetchLimit))).sortedByDate(.orderedDescending)

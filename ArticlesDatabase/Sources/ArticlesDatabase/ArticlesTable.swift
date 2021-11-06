@@ -12,8 +12,10 @@ import RSDatabase
 import RSDatabaseObjC
 import RSParser
 import Articles
+import os.log
 
 final class ArticlesTable: DatabaseTable {
+    var log = OSLog(subsystem: Bundle.main.bundleIdentifier!, category: "ArticlesTable")
 
 	let name: String
 	private let accountID: String
@@ -657,6 +659,11 @@ private extension ArticlesTable {
 	private func fetchArticles(_ fetchMethod: @escaping ArticlesFetchMethod) throws -> Set<Article> {
 		var articles = Set<Article>()
 		var error: DatabaseError? = nil
+        
+        if queue.isSuspended {
+            os_log("synch fetch articles from suspended DatabaseQueue!", log: log, type: .fault)
+        }
+        
 		queue.runInDatabaseSync { databaseResult in
 			switch databaseResult {
 			case .success(let database):
