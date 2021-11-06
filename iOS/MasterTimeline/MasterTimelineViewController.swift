@@ -20,6 +20,7 @@ class MasterTimelineViewController: UITableViewController, UndoableCommandRunner
 	private var refreshProgressView: RefreshProgressView?
 
 	@IBOutlet weak var markAllAsReadButton: UIBarButtonItem!
+	@IBOutlet weak var quitButton: UIBarButtonItem!
 
 	private var filterButton: UIBarButtonItem!
 	private var firstUnreadButton: UIBarButtonItem!
@@ -159,6 +160,12 @@ class MasterTimelineViewController: UITableViewController, UndoableCommandRunner
 			MarkAsReadAlertController.confirm(self, coordinator: coordinator, confirmTitle: title, sourceType: contentView) { [weak self] in
 				self?.coordinator.markAllAsReadInTimeline()
 			}
+		}
+	}
+	
+	@IBAction func quit(_ sender: Any) {
+		if #available(iOS 14, *) {
+			try? WidgetDataEncoder.shared.encodeWidgetData(source: "MasterTimelineViewController.quit")
 		}
 	}
 	
