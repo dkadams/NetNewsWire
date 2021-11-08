@@ -405,7 +405,7 @@ private extension AppDelegate {
 			AccountManager.shared.refreshAll(errorHandler: ErrorHandler.log) { [unowned self] in
 				if !AccountManager.shared.isSuspended {
 					if #available(iOS 14, *) {
-						try? WidgetDataEncoder.shared.encodeWidgetData(source: "AppDelegate.performBackgroundFeedRefresh")
+						try? WidgetDataEncoder.shared.encodeWidgetDataSync(source: "AppDelegate.performBackgroundFeedRefresh")
 					}
 					os_log(.default, log: self.log, "Suspending application")
 					self.suspendApplication()
@@ -453,7 +453,7 @@ private extension AppDelegate {
 		account!.syncArticleStatus(completion: { [weak self] _ in
 			if !AccountManager.shared.isSuspended {
 				if #available(iOS 14, *) {
-					try? WidgetDataEncoder.shared.encodeWidgetData(source: "AppDelegate.handleMarkAsRead")
+					try? WidgetDataEncoder.shared.encodeWidgetDataSync(source: "AppDelegate.handleMarkAsRead")
 				}
 				self?.prepareAccountsForBackground()
 				self?.suspendApplication()
@@ -482,7 +482,7 @@ private extension AppDelegate {
 		account!.syncArticleStatus(completion: { [weak self] _ in
 			if !AccountManager.shared.isSuspended {
 				if #available(iOS 14, *) {
-					try? WidgetDataEncoder.shared.encodeWidgetData(source: "AppDelegate.handleMarkAsStarred")
+					try? WidgetDataEncoder.shared.encodeWidgetDataSync(source: "AppDelegate.handleMarkAsStarred")
 				}
 				self?.prepareAccountsForBackground()
 				self?.suspendApplication()

@@ -29,76 +29,81 @@ public final class WidgetDataEncoder {
 	private init () {}
 	
 	@available(iOS 14, *)
-	func encodeWidgetData(source: String) throws {
+	func encodeWidgetDataSync(source: String) throws {
 		
-		os_log(.default, log: log, "Launch async encoding of widget data for: %{public}@", source as NSString)
-		
-		DispatchQueue.main.async {
-			do {
-				os_log(.fault, log: self.log, "encoding widget data for: %{public}@", source as NSString)
+		do {
+			os_log(.fault, log: self.log, "encoding widget data for: %{public}@", source as NSString)
 
-				let unreadArticles = Array(try AccountManager.shared.fetchArticles(.unread(self.fetchLimit))).sortedByDate(.orderedDescending)
-				let starredArticles = Array(try AccountManager.shared.fetchArticles(.starred(self.fetchLimit))).sortedByDate(.orderedDescending)
-				let todayArticles = Array(try AccountManager.shared.fetchArticles(.today(self.fetchLimit))).sortedByDate(.orderedDescending)
-				
-				var unread = [LatestArticle]()
-				var today = [LatestArticle]()
-				var starred = [LatestArticle]()
-				
-				for article in unreadArticles {
-					let latestArticle = LatestArticle(id: article.sortableArticleID,
-													  feedTitle: article.sortableName,
-													  articleTitle: ArticleStringFormatter.truncatedTitle(article).isEmpty ? ArticleStringFormatter.truncatedSummary(article) : ArticleStringFormatter.truncatedTitle(article),
-													  articleSummary: article.summary,
-													  feedIcon: article.iconImage()?.image.dataRepresentation(),
-													  pubDate: article.datePublished?.description ?? "")
-					unread.append(latestArticle)
-				}
-				
-				for article in starredArticles {
-					let latestArticle = LatestArticle(id: article.sortableArticleID,
-													  feedTitle: article.sortableName,
-													  articleTitle: ArticleStringFormatter.truncatedTitle(article).isEmpty ? ArticleStringFormatter.truncatedSummary(article) : ArticleStringFormatter.truncatedTitle(article),
-													  articleSummary: article.summary,
-													  feedIcon: article.iconImage()?.image.dataRepresentation(),
-													  pubDate: article.datePublished?.description ?? "")
-					starred.append(latestArticle)
-				}
-				
-				for article in todayArticles {
-					let latestArticle = LatestArticle(id: article.sortableArticleID,
-													  feedTitle: article.sortableName,
-													  articleTitle: ArticleStringFormatter.truncatedTitle(article).isEmpty ? ArticleStringFormatter.truncatedSummary(article) : ArticleStringFormatter.truncatedTitle(article),
-													  articleSummary: article.summary,
-													  feedIcon: article.iconImage()?.image.dataRepresentation(),
-													  pubDate: article.datePublished?.description ?? "")
-					today.append(latestArticle)
-				}
-				
-				let latestData = WidgetData(currentUnreadCount: SmartFeedsController.shared.unreadFeed.unreadCount,
-											currentTodayCount: SmartFeedsController.shared.todayFeed.unreadCount,
-											currentStarredCount: try! SmartFeedsController.shared.starredFeed.fetchArticles().count,
-											unreadArticles: unread,
-											starredArticles: starred,
-											todayArticles:today,
-											lastUpdateTime: Date())
-				
-				
-				let encodedData = try JSONEncoder().encode(latestData)
-				os_log(.debug, log: self.log, "Finished encoding widget data.")
-				
-				if self.fileExists() {
-					try? FileManager.default.removeItem(at: self.dataURL!)
-					os_log(.debug, log: self.log, "Removed widget data from container.")
-				}
-				if FileManager.default.createFile(atPath: self.dataURL!.path, contents: encodedData, attributes: nil) {
-					os_log(.debug, log: self.log, "Wrote widget data to container.")
-					WidgetCenter.shared.reloadAllTimelines()
-				}
-			} catch {
-				print(error.localizedDescription)
+			let unreadArticles = Array(try AccountManager.shared.fetchArticles(.unread(self.fetchLimit))).sortedByDate(.orderedDescending)
+			let starredArticles = Array(try AccountManager.shared.fetchArticles(.starred(self.fetchLimit))).sortedByDate(.orderedDescending)
+			let todayArticles = Array(try AccountManager.shared.fetchArticles(.today(self.fetchLimit))).sortedByDate(.orderedDescending)
+			
+			var unread = [LatestArticle]()
+			var today = [LatestArticle]()
+			var starred = [LatestArticle]()
+			
+			for article in unreadArticles {
+				let latestArticle = LatestArticle(id: article.sortableArticleID,
+												  feedTitle: article.sortableName,
+												  articleTitle: ArticleStringFormatter.truncatedTitle(article).isEmpty ? ArticleStringFormatter.truncatedSummary(article) : ArticleStringFormatter.truncatedTitle(article),
+												  articleSummary: article.summary,
+												  feedIcon: article.iconImage()?.image.dataRepresentation(),
+												  pubDate: article.datePublished?.description ?? "")
+				unread.append(latestArticle)
 			}
+			
+			for article in starredArticles {
+				let latestArticle = LatestArticle(id: article.sortableArticleID,
+												  feedTitle: article.sortableName,
+												  articleTitle: ArticleStringFormatter.truncatedTitle(article).isEmpty ? ArticleStringFormatter.truncatedSummary(article) : ArticleStringFormatter.truncatedTitle(article),
+												  articleSummary: article.summary,
+												  feedIcon: article.iconImage()?.image.dataRepresentation(),
+												  pubDate: article.datePublished?.description ?? "")
+				starred.append(latestArticle)
+			}
+			
+			for article in todayArticles {
+				let latestArticle = LatestArticle(id: article.sortableArticleID,
+												  feedTitle: article.sortableName,
+												  articleTitle: ArticleStringFormatter.truncatedTitle(article).isEmpty ? ArticleStringFormatter.truncatedSummary(article) : ArticleStringFormatter.truncatedTitle(article),
+												  articleSummary: article.summary,
+												  feedIcon: article.iconImage()?.image.dataRepresentation(),
+												  pubDate: article.datePublished?.description ?? "")
+				today.append(latestArticle)
+			}
+			
+			let latestData = WidgetData(currentUnreadCount: SmartFeedsController.shared.unreadFeed.unreadCount,
+										currentTodayCount: SmartFeedsController.shared.todayFeed.unreadCount,
+										currentStarredCount: try! SmartFeedsController.shared.starredFeed.fetchArticles().count,
+										unreadArticles: unread,
+										starredArticles: starred,
+										todayArticles:today,
+										lastUpdateTime: Date())
+			
+			
+			let encodedData = try JSONEncoder().encode(latestData)
+			os_log(.debug, log: self.log, "Finished encoding widget data.")
+			
+			if self.fileExists() {
+				try? FileManager.default.removeItem(at: self.dataURL!)
+				os_log(.debug, log: self.log, "Removed widget data from container.")
+			}
+			if FileManager.default.createFile(atPath: self.dataURL!.path, contents: encodedData, attributes: nil) {
+				os_log(.debug, log: self.log, "Wrote widget data to container.")
+				WidgetCenter.shared.reloadAllTimelines()
+			}
+		} catch {
+			print(error.localizedDescription)
 		}
+	}
+	
+	@available(iOS 14, *)
+	func encodeWidgetDataAsync(source: String) throws {
+		os_log(.default, log: log, "Launch async encoding of widget data for: %{public}@", source as NSString)
+		DispatchQueue.main.async {
+			try? self.encodeWidgetDataSync(source: source)
+		}
+
 	}
 	
 	private func fileExists() -> Bool {

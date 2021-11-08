@@ -165,7 +165,7 @@ class MasterTimelineViewController: UITableViewController, UndoableCommandRunner
 	
 	@IBAction func quit(_ sender: Any) {
 		if #available(iOS 14, *) {
-			try? WidgetDataEncoder.shared.encodeWidgetData(source: "MasterTimelineViewController.quit")
+			try? WidgetDataEncoder.shared.encodeWidgetDataSync(source: "MasterTimelineViewController.quit")
 		}
 	}
 	
